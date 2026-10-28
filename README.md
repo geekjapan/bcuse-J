@@ -16,15 +16,6 @@ bcuse-J adds value only in the last row. It depends on the geekjapan browser-use
 fork (pinned commit `76e5847`) and the installed `cua-driver` binary. It copies
 neither project.
 
-## Install as an agent skill
-
-```bash
-npx skills add geekjapan/bcuse-J
-```
-
-This installs [skills/bcuse/SKILL.md](skills/bcuse/SKILL.md) for Claude Code, Codex, Cursor, and other agents. The
-skill runs bcuse with `uvx --from git+https://github.com/geekjapan/bcuse-J bcuse`, so no clone is needed.
-
 ## Policies
 
 | `--policy` | Who chooses | Text for input fields |
@@ -39,30 +30,99 @@ on the same task by changing one flag. `generative` keeps browser-use's full
 feature set (navigation, extraction, tabs). Its desktop actions have the same
 freshness check.
 
-## Set up
+## Install
+
+bcuse has two parts. You can install either one, or both.
+
+- **The module** gives you the `bcuse` command and the `bcuse` Python package. Install it to run tasks yourself
+  or to call bcuse from your own code.
+- **The agent skill** teaches a coding agent (Claude Code, Codex, Cursor, and others) when and how to run bcuse.
+  The skill runs the module through `uvx`, so it needs the same prerequisites and credentials.
+
+### Step 1. Install the prerequisites
+
+| Requirement | Needed for | How to install |
+| --- | --- | --- |
+| [uv](https://docs.astral.sh/uv/getting-started/installation/) | Everything | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| Python 3.12 or later | Everything | `uv python install 3.12` |
+| Google Chrome or Chromium | Browser tasks | Install Chrome normally |
+| Cua Driver (macOS) | Desktop tasks | `/bin/bash -c "$(curl -fsSL https://cua.ai/driver/install.sh)"` |
+| Node.js | The agent skill only | Needed for `npx` |
+
+For desktop tasks, give CuaDriver.app the macOS Accessibility and Screen Recording permissions once:
 
 ```bash
-uv sync
-cp .env.example .env   # fill in the credentials for the policies you use
+cua-driver permissions grant    # opens the macOS permission dialogs
+cua-driver permissions status   # both should show "granted"
 ```
 
-Desktop control needs Cua Driver and macOS Accessibility and Screen Recording
-permission for CuaDriver.app. Grant it once yourself:
+### Step 2. Install the module
+
+Pick the row that matches what you want to do.
+
+| You want to | Install command | Then |
+| --- | --- | --- |
+| Try bcuse without installing it | Nothing to install | `uvx --from git+https://github.com/geekjapan/bcuse-J bcuse --help` |
+| Get a `bcuse` command on your PATH | `uv tool install git+https://github.com/geekjapan/bcuse-J` | `bcuse --help` |
+| Use bcuse as a library in your project | `uv add git+https://github.com/geekjapan/bcuse-J` | `from bcuse.agent import Agent` |
+| Change bcuse itself | `git clone https://github.com/geekjapan/bcuse-J && cd bcuse-J && uv sync` | `uv run pytest` |
+
+### Step 3. Set your credentials
+
+Copy the template and fill in only the policies you use:
 
 ```bash
-cua-driver permissions grant
+curl -fsSL https://raw.githubusercontent.com/geekjapan/bcuse-J/main/.env.example -o .env
 ```
+
+| Policy | Variables |
+| --- | --- |
+| `azure` | `AZURE_ENDPOINT`, and `AZURE_API_KEY` or `AZURE_ENTRA_TOKEN` |
+| `openai` | `OPENAI_API_KEY` |
+| `llm`, `generative` | `LLM_MODEL`, `LLM_API_KEY`, and `LLM_BASE_URL` for a non-OpenAI endpoint |
+| Text for `azure` and `openai` | `TEXT_MODEL`, `TEXT_MODEL_API_KEY`, and optionally `TEXT_MODEL_BASE_URL` |
+
+Without the text variables, the Decision policies cannot type into fields. Keep `.env` out of version control.
+Load it with `--env-file .env` for `uvx` and `uv run`. For an installed `bcuse` command, export the variables
+first, for example with `set -a; source .env; set +a`.
+
+### Step 4. Install the agent skill
+
+```bash
+npx skills add geekjapan/bcuse-J
+```
+
+The command asks which agents to install for, and whether to install for this project or for your user. To skip
+the questions, name them. For example, this installs for Claude Code at the user level, in
+`~/.claude/skills/bcuse/SKILL.md`:
+
+```bash
+npx skills add geekjapan/bcuse-J -g -a claude-code -y
+```
+
+| Task | Command |
+| --- | --- |
+| See the skill before installing | `npx skills add geekjapan/bcuse-J --list` |
+| Update it | `npx skills update bcuse` |
+| Remove it | `npx skills remove bcuse` |
+
+The skill tells the agent to check the prerequisites, read credentials only from the environment, and check the
+real outcome before it reports success. It does not install Cua Driver, grant permissions, or create `.env`.
+Complete steps 1 and 3 first.
 
 ## Run
 
+These examples use the `bcuse` command from step 2. With `uvx`, replace `bcuse` with
+`uvx --env-file .env --from git+https://github.com/geekjapan/bcuse-J bcuse`.
+
 ```bash
 # Browser only, Azure Decision 1
-uv run --env-file .env bcuse --policy azure \
+bcuse --policy azure \
   --url https://example.com/form --task 'Enter Ada as name and save.'
 
 # A browser page and a desktop window in one task, LLM chooser
-uv run --env-file .env bcuse --policy llm \
-  --url https://example.com/order --desktop-pid 12345 --desktop-title 'Orders' \
+bcuse --policy llm \
+  --url https://example.com/order --desktop-pid "$(pgrep -x Orders | head -1)" --desktop-title 'Orders' \
   --task 'Copy the order number from the page into the Orders window and save.'
 ```
 
