@@ -9,6 +9,9 @@ dependencies = [
   "browser-use @ git+https://github.com/geekjapan/browser-use@76e5847814d6ba5b83e5b9948ffb6648c2d76feb",
 ]
 
+[project.scripts]
+bcuse = "bcuse.__main__:cli"
+
 [dependency-groups]
 dev = ["pytest>=8", "pytest-asyncio>=1", "ruff>=0.13"]
 

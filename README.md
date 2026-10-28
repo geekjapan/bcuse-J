@@ -16,6 +16,15 @@ bcuse-J adds value only in the last row. It depends on the geekjapan browser-use
 fork (pinned commit `76e5847`) and the installed `cua-driver` binary. It copies
 neither project.
 
+## Install as an agent skill
+
+```bash
+npx skills add geekjapan/bcuse-J
+```
+
+This installs [skills/bcuse/SKILL.md](skills/bcuse/SKILL.md) for Claude Code, Codex, Cursor, and other agents. The
+skill runs bcuse with `uvx --from git+https://github.com/geekjapan/bcuse-J bcuse`, so no clone is needed.
+
 ## Policies
 
 | `--policy` | Who chooses | Text for input fields |
@@ -48,11 +57,11 @@ cua-driver permissions grant
 
 ```bash
 # Browser only, Azure Decision 1
-uv run --env-file .env python -m bcuse --policy azure \
+uv run --env-file .env bcuse --policy azure \
   --url https://example.com/form --task 'Enter Ada as name and save.'
 
 # A browser page and a desktop window in one task, LLM chooser
-uv run --env-file .env python -m bcuse --policy llm \
+uv run --env-file .env bcuse --policy llm \
   --url https://example.com/order --desktop-pid 12345 --desktop-title 'Orders' \
   --task 'Copy the order number from the page into the Orders window and save.'
 ```

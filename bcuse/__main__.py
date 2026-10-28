@@ -1,6 +1,6 @@
 """Run one task on a browser page, a desktop window, or both.
 
-uv run --env-file .env python -m bcuse --task '...' [--url URL] [--desktop-pid PID] --policy azure|openai|llm|generative
+bcuse --task '...' [--url URL] [--desktop-pid PID] --policy azure|openai|llm|generative
 """
 
 import argparse
@@ -67,8 +67,8 @@ async def main(args: argparse.Namespace) -> int:
 		return 0 if result.status == 'model_done' else 1
 
 
-if __name__ == '__main__':
-	parser = argparse.ArgumentParser(prog='python -m bcuse')
+def cli() -> None:
+	parser = argparse.ArgumentParser(prog='bcuse')
 	parser.add_argument('--task', required=True)
 	parser.add_argument('--url')
 	parser.add_argument('--desktop-pid', type=int)
@@ -77,3 +77,7 @@ if __name__ == '__main__':
 	parser.add_argument('--max-steps', type=int, default=20)
 	parser.add_argument('--headless', action='store_true')
 	raise SystemExit(asyncio.run(main(parser.parse_args())))
+
+
+if __name__ == '__main__':
+	cli()
