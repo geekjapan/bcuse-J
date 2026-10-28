@@ -1,5 +1,7 @@
 # bcuse-J
 
+English | [日本語](README.ja.md)
+
 One agent loop for a browser page and a native desktop window. A finite-choice
 Decision model (Azure Microsoft Decision 1 or OpenAI Decisions) or an LLM chooses
 each action from the same table of observed targets.
